@@ -1,0 +1,36 @@
+# Learn more about configuring your Customer account UI extension:
+# https://shopify.dev/api/customer-account-ui-extensions/unstable/configuration
+
+# The version of APIs your extension will receive. Learn more:
+# https://shopify.dev/docs/api/usage/versioning
+api_version = "2025-10"
+
+# First extension: Order Status Block
+[[extensions]]
+name = "refund-portal-block"
+handle = "refund-portal-block"
+type = "ui_extension"
+uid = "3a0fc4d5-60d9-f25f-a513-3e2fd9ade3f3fa905a82"
+
+[[extensions.targeting]]
+module = "./src/OrderStatusBlock.jsx"
+target = "customer-account.order-status.block.render"
+
+[extensions.capabilities]
+api_access = true
+
+# Second extension: Refund Portal Page
+[[extensions]]
+name = "refund-portal-page"
+handle = "refund-portal-page"
+uid = "7f1704de-aa80-ec4a-7106-47af0c41090ee316dc72"
+type = "ui_extension"
+
+[[extensions.targeting]]
+module = "./src/RefundPortal.jsx"
+target = "customer-account.page.render"
+
+[extensions.capabilities]
+api_access = true
+# network_access = true
+
