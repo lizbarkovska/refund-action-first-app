@@ -1,3 +1,15 @@
 {
-  "earnPoints": "Vous avez gagné 1,000 points avec cette commande. Vous avez été promu au niveau Platine."
+  "earnPoints": "Vous avez gagné 1,000 points avec cette commande. Vous avez été promu au niveau Platine.",
+  "refundPortalTitle": "Portail de remboursement",
+  "refundPortalSubtitle": "Demander un remboursement ou un crédit en magasin pour votre commande",
+  "refundOptionsHeading": "Choisissez votre option de remboursement",
+  "refundInstructions": "Veuillez sélectionner la méthode",
+  "requestRefundButton": "Demander un remboursement",
+  "requestStoreCreditButton": "Demander un crédit en magasin",
+  "selectItemsHeading": "Sélectionner les articles à retourner",
+  "selectItemsInstructions": "Cochez les articles que vous souhaitez retourner ou échanger.",
+  "continueButton": "Continuer avec les articles sélectionnés",
+  "loadingOrder": "Chargement des détails de la commande...",
+  "noOrderError": "Veuillez accéder à cette page à partir des détails de votre commande.",
+  "quantityLabel": "Qté"
 }

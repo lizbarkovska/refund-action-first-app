@@ -5,5 +5,11 @@
   "refundOptionsHeading": "Choose your refund option",
   "refundInstructions": "Please select the way",
   "requestRefundButton": "Request Refund",
-  "requestStoreCreditButton": "Request Store Credit"
+  "requestStoreCreditButton": "Request Store Credit",
+  "selectItemsHeading": "Select items to return",
+  "selectItemsInstructions": "Check the items you'd like to return or exchange.",
+  "continueButton": "Continue with selected items",
+  "loadingOrder": "Loading order details...",
+  "noOrderError": "Please access this page from your order details.",
+  "quantityLabel": "Qty"
 }

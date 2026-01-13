@@ -14,7 +14,10 @@ api_version = "2026-04"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = ""
+scopes = "read_customers,read_orders,write_orders, customer_read_orders"
+
+# Protected customer data access for Customer Account API
+use_legacy_install_flow = false
 
 [auth]
 redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
