@@ -11,5 +11,9 @@
   "continueButton": "Continue with selected items",
   "loadingOrder": "Loading order details...",
   "noOrderError": "Please access this page from your order details.",
-  "quantityLabel": "Qty"
+  "quantityLabel": "Qty",
+  "successHeading": "Request submitted successfully",
+  "successMessage": "Your refund request has been submitted. We will contact you soon to process your request.",
+  "selectItemsError": "Please select at least one item to return",
+  "submitError": "Failed to submit request. Please try again."
 }

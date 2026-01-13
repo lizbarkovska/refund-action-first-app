@@ -11,5 +11,9 @@
   "continueButton": "Continuer avec les articles sélectionnés",
   "loadingOrder": "Chargement des détails de la commande...",
   "noOrderError": "Veuillez accéder à cette page à partir des détails de votre commande.",
-  "quantityLabel": "Qté"
+  "quantityLabel": "Qté",
+  "successHeading": "Demande soumise avec succès",
+  "successMessage": "Votre demande de remboursement a été soumise. Nous vous contacterons bientôt pour traiter votre demande.",
+  "selectItemsError": "Veuillez sélectionner au moins un article à retourner",
+  "submitError": "Échec de l'envoi de la demande. Veuillez réessayer."
 }
