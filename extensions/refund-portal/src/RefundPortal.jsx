@@ -52,6 +52,7 @@ function RefundPortalPage({ orderId }) {
                   id
                   title
                   quantity
+                  variantId
                   image {
                     url
                     altText
@@ -102,6 +103,7 @@ function RefundPortalPage({ orderId }) {
   };
 
   const handleRefundTypeSubmit = async (refundType) => {
+    console.log("obj", Object.entries(selectedItems));
     // Validate: at least one item must be selected
     const selectedItemIds = Object.entries(selectedItems)
       .filter(([_, checked]) => checked)
@@ -114,11 +116,27 @@ function RefundPortalPage({ orderId }) {
       return;
     }
 
+    // Get the full line items data and map to variant ID + product name
+    const lineItems = orderData.value?.lineItems?.edges || [];
+    const selectedItemsData = selectedItemIds
+      .map((lineItemId) => {
+        const lineItem = lineItems.find(({ node }) => node.id === lineItemId);
+        if (!lineItem) return null;
+
+        return {
+          variantId: lineItem.node.variantId || null,
+          productName: lineItem.node.title,
+        };
+      })
+      .filter((item) => item !== null);
+
+    console.log("Selected items data:", selectedItemsData);
+
     setSubmitting(true);
     setSubmitError(null);
 
     try {
-      // Use Customer Account API to write customer metafield
+      // Use Customer Account API to write customer metafields
       // Get current customer ID and construct the GID format
       const customerNumericId = shopify.authenticatedAccount.customer.value.id;
 
@@ -132,14 +150,18 @@ function RefundPortalPage({ orderId }) {
         throw new Error("Unable to get customer ID");
       }
 
+      // Extract numeric order ID from GID format (gid://shopify/Order/123456 -> 123456)
+      const orderNumericId = orderId.split("/").pop();
+
       console.log("Submitting refund request:", {
         customerGID,
         orderId,
+        orderNumericId,
         refundType,
-        itemCount: selectedItemIds.length,
+        itemCount: selectedItemsData.length,
       });
 
-      // GraphQL mutation to set customer metafield
+      // GraphQL mutation to set multiple customer metafields
       // This works for both creating new metafields AND updating existing ones
       const mutation = `
         mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
@@ -157,13 +179,6 @@ function RefundPortalPage({ orderId }) {
         }
       `;
 
-      const metafieldValue = JSON.stringify({
-        orderId: orderId,
-        lineItems: selectedItemIds,
-        refundType: refundType,
-        timestamp: new Date().toISOString(),
-      });
-
       const response = await fetch(
         "shopify://customer-account/api/2025-10/graphql.json",
         {
@@ -174,11 +189,25 @@ function RefundPortalPage({ orderId }) {
             variables: {
               metafields: [
                 {
-                  ownerId: customerGID, // Use the full GID format
+                  ownerId: customerGID,
+                  namespace: "custom",
+                  key: "refund_order_id",
+                  type: "single_line_text_field",
+                  value: orderId,
+                },
+                {
+                  ownerId: customerGID,
                   namespace: "custom",
                   key: "refund_type",
                   type: "single_line_text_field",
-                  value: metafieldValue,
+                  value: refundType,
+                },
+                {
+                  ownerId: customerGID,
+                  namespace: "custom",
+                  key: "refund_order_items",
+                  type: "single_line_text_field",
+                  value: JSON.stringify(selectedItemsData),
                 },
               ],
             },
