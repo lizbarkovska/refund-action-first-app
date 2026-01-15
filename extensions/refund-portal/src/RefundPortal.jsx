@@ -132,6 +132,39 @@ function RefundPortalPage({ orderId }) {
 
     console.log("Selected items data:", selectedItemsData);
 
+    // Helper function to fetch existing refund requests
+    const fetchExistingRefundRequests = async () => {
+      const query = `
+        query GetCustomerMetafield {
+          customer {
+            metafield(namespace: "custom", key: "refund_requests") {
+              value
+            }
+          }
+        }
+      `;
+
+      const response = await fetch(
+        "shopify://customer-account/api/2025-10/graphql.json",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query,
+          }),
+        }
+      );
+
+      const result = await response.json();
+      if (result.errors) {
+        throw new Error(result.errors[0].message);
+      }
+
+      // Parse existing value or return empty array
+      const existingValue = result.data?.customer?.metafield?.value;
+      return existingValue ? JSON.parse(existingValue) : [];
+    };
+
     setSubmitting(true);
     setSubmitError(null);
 
@@ -153,15 +186,27 @@ function RefundPortalPage({ orderId }) {
       // Extract numeric order ID from GID format (gid://shopify/Order/123456 -> 123456)
       const orderNumericId = orderId.split("/").pop();
 
+      // Fetch existing refund requests
+      const existingRequests = await fetchExistingRefundRequests();
+
+      // Create new refund request entry (semicolon-delimited)
+      const newRequestEntry = `${orderId};${refundType};${JSON.stringify(selectedItemsData)}`;
+
+      // Append to existing requests
+      const updatedRequests = [...existingRequests, newRequestEntry];
+
       console.log("Submitting refund request:", {
         customerGID,
         orderId,
         orderNumericId,
         refundType,
         itemCount: selectedItemsData.length,
+        existingRequestsCount: existingRequests.length,
+        newRequestEntry,
+        totalRequests: updatedRequests.length,
       });
 
-      // GraphQL mutation to set multiple customer metafields
+      // GraphQL mutation to set refund_requests array metafield
       // This works for both creating new metafields AND updating existing ones
       const mutation = `
         mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
@@ -191,23 +236,9 @@ function RefundPortalPage({ orderId }) {
                 {
                   ownerId: customerGID,
                   namespace: "custom",
-                  key: "refund_order_id",
-                  type: "single_line_text_field",
-                  value: orderId,
-                },
-                {
-                  ownerId: customerGID,
-                  namespace: "custom",
-                  key: "refund_type",
-                  type: "single_line_text_field",
-                  value: refundType,
-                },
-                {
-                  ownerId: customerGID,
-                  namespace: "custom",
-                  key: "refund_order_items",
-                  type: "single_line_text_field",
-                  value: JSON.stringify(selectedItemsData),
+                  key: "refund_requests",
+                  type: "list.single_line_text_field",
+                  value: JSON.stringify(updatedRequests),
                 },
               ],
             },
