@@ -327,47 +327,62 @@ function RefundPortalPage({ orderId }) {
       heading={shopify.i18n.translate("refundPortalTitle")}
       subheading={`Order ${orderData.value?.name || ""}`}
     >
-      <s-section heading={shopify.i18n.translate("selectItemsHeading")}>
-        <s-paragraph>
-          {shopify.i18n.translate("selectItemsInstructions")}
-        </s-paragraph>
+      <s-section>
+        {" "}
+        <s-stack alignItems="center">
+          <s-box
+            border="base base solid"
+            borderRadius="base"
+            padding="base base base base"
+            maxInlineSize="800px"
+            background="subdued"
+          >
+            <s-heading>
+              {shopify.i18n.translate("selectItemsHeading")}
+            </s-heading>
+            <s-paragraph>
+              {shopify.i18n.translate("selectItemsInstructions")}
+            </s-paragraph>
 
-        {/* Show error banner if there's a submit error */}
-        {submitError && (
-          <s-banner>
-            <s-text>{submitError}</s-text>
-          </s-banner>
-        )}
+            {/* Show error banner if there's a submit error */}
+            {submitError && (
+              <s-banner>
+                <s-text>{submitError}</s-text>
+              </s-banner>
+            )}
 
-        <s-stack
-          padding="large large large none"
-          maxInlineSize="900px"
-          direction="inline"
-          gap="base"
-        >
-          {lineItems.map(({ node: item }) => (
-            <LineItemCard
-              key={item.id}
-              item={item}
-              selected={selectedItems[item.id] || false}
-              onCheckboxChange={(checked) =>
-                handleCheckboxChange(item.id, checked)
-              }
+            <s-stack
+              background="base"
+              padding="large none large none"
+              maxInlineSize="900px"
+              direction="inline"
+              gap="base"
+            >
+              {lineItems.map(({ node: item }) => (
+                <LineItemCard
+                  key={item.id}
+                  item={item}
+                  selected={selectedItems[item.id] || false}
+                  onCheckboxChange={(checked) =>
+                    handleCheckboxChange(item.id, checked)
+                  }
+                />
+              ))}
+            </s-stack>
+
+            <RefundSurvey
+              onSubmit={handleRefundTypeSubmit}
+              hasSelectedItems={hasSelectedItems}
+              submitting={submitting}
+              onRefundReasonSelect={handleRefundReasonSelection}
+              refundReasonIndicated={refundReasonIndicated}
             />
-          ))}
+
+            {lineItems.length === 0 && (
+              <s-text>No items available for return.</s-text>
+            )}
+          </s-box>
         </s-stack>
-
-        <RefundSurvey
-          onSubmit={handleRefundTypeSubmit}
-          hasSelectedItems={hasSelectedItems}
-          submitting={submitting}
-          onRefundReasonSelect={handleRefundReasonSelection}
-          refundReasonIndicated={refundReasonIndicated}
-        />
-
-        {lineItems.length === 0 && (
-          <s-text>No items available for return.</s-text>
-        )}
       </s-section>
     </s-page>
   );
@@ -380,11 +395,16 @@ function LineItemCard({ item, selected, onCheckboxChange }) {
   };
 
   return (
-    <s-box padding="base" borderRadius="base" borderWidth="base">
-      <s-stack gap="base" alignItems="start">
+    <s-box
+      padding="base"
+      background="subdued"
+      borderRadius="base"
+      borderWidth="base"
+    >
+      <s-stack gap="base" alignItems="center">
         {/* Product Image */}
         {item.image?.url && (
-          <s-box inlineSize="80px" blockSize="80px">
+          <s-box inlineSize="100px" blockSize="80px">
             <s-image
               src={item.image.url}
               alt={item.image.altText || item.title}
@@ -397,29 +417,37 @@ function LineItemCard({ item, selected, onCheckboxChange }) {
         )}
 
         {/* Product Details */}
-        <s-stack direction="column" gap="tight" inlineSize="fill">
-          <s-text weight="bold">{item.title}</s-text>
+        <s-stack
+          direction="block"
+          gap="tight"
+          inlineSize="fill"
+          alignItems="start"
+          padding="base none none small"
+        >
+          <s-text type="strong">{item.title}</s-text>
 
           {item.variantTitle && (
             <s-text appearance="subdued">{item.variantTitle}</s-text>
           )}
 
           <s-text>
-            {shopify.i18n.translate("quantityLabel")}: {item.quantity} •{" "}
             {formatPrice(
               item.currentTotalPrice.amount,
               item.currentTotalPrice.currencyCode
-            )}
+            )}{" "}
+            / {shopify.i18n.translate("quantityLabel")}: {item.quantity}
           </s-text>
+          {/* Checkbox */}
+          <s-stack paddingBlockStart="small-100">
+            {" "}
+            <s-checkbox
+              checked={selected}
+              label="I'd like a refund"
+              onChange={(e) => onCheckboxChange(e.currentTarget.checked)}
+              accessibilityLabel={`Select ${item.title} for return`}
+            />
+          </s-stack>
         </s-stack>
-
-        {/* Checkbox */}
-        <s-checkbox
-          checked={selected}
-          label="Add to refund"
-          onChange={(e) => onCheckboxChange(e.currentTarget.checked)}
-          accessibilityLabel={`Select ${item.title} for return`}
-        />
       </s-stack>
     </s-box>
   );
@@ -435,7 +463,7 @@ function RefundSurvey({
 }) {
   return (
     <>
-      <s-text>Please fill in the refund survey</s-text>
+      <s-heading>Please fill in the refund survey</s-heading>
       <s-stack gap="small" paddingBlock="small">
         <s-choice-list
           onChange={(e) => onRefundReasonSelect(e.currentTarget.values[0] ?? 0)}
@@ -450,6 +478,11 @@ function RefundSurvey({
             Shipping/fulfillment problems
           </s-choice>
         </s-choice-list>
+
+        <s-banner
+          heading="You can now choose how you'd like to receive your refund: either as money returned to your original payment method or as store credit. Simply select your preferred refund type during the process."
+          tone="info"
+        ></s-banner>
         <s-button-group>
           <s-button
             slot="primary-action"
