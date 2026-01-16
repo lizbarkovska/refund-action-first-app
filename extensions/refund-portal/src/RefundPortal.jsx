@@ -320,6 +320,7 @@ function RefundPortalPage({ orderId }) {
 
   const lineItems = orderData.value?.lineItems?.edges || [];
   const hasSelectedItems = Object.values(selectedItems).some((v) => v === true);
+  const refundReasonIndicated = refundReason !== "";
 
   return (
     <s-page
@@ -361,6 +362,7 @@ function RefundPortalPage({ orderId }) {
           hasSelectedItems={hasSelectedItems}
           submitting={submitting}
           onRefundReasonSelect={handleRefundReasonSelection}
+          refundReasonIndicated={refundReasonIndicated}
         />
 
         {lineItems.length === 0 && (
@@ -429,6 +431,7 @@ function RefundSurvey({
   hasSelectedItems,
   submitting,
   onRefundReasonSelect,
+  refundReasonIndicated,
 }) {
   return (
     <>
@@ -452,7 +455,7 @@ function RefundSurvey({
             slot="primary-action"
             variant="primary"
             onClick={() => onSubmit("Store Credit")}
-            disabled={submitting || !hasSelectedItems}
+            disabled={submitting || !hasSelectedItems || !refundReasonIndicated}
             loading={submitting}
           >
             {shopify.i18n.translate("requestStoreCreditButton")}
