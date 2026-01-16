@@ -26,6 +26,7 @@ function RefundPortalPage({ orderId }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [refundReason, setRefundReason] = useState("");
 
   useEffect(() => {
     if (orderId) {
@@ -88,6 +89,7 @@ function RefundPortalPage({ orderId }) {
       }
 
       orderData.value = result.data.order;
+      console.log(orderData.value, "order data");
     } catch (err) {
       error.value = err.message || "Failed to load order details";
     } finally {
@@ -100,6 +102,10 @@ function RefundPortalPage({ orderId }) {
       ...prev,
       [lineItemId]: checked,
     }));
+  };
+
+  const handleRefundReasonSelection = (refundReason) => {
+    setRefundReason(refundReason);
   };
 
   const handleRefundTypeSubmit = async (refundType) => {
@@ -190,7 +196,9 @@ function RefundPortalPage({ orderId }) {
       const existingRequests = await fetchExistingRefundRequests();
 
       // Create new refund request entry (semicolon-delimited)
-      const newRequestEntry = `${orderId};${refundType};${JSON.stringify(selectedItemsData)}`;
+      const newRequestEntry = `ID: ${orderId}; refund method: ${refundType};reason: ${refundReason}; items: ${JSON.stringify(
+        selectedItemsData
+      )}`;
 
       // Append to existing requests
       const updatedRequests = [...existingRequests, newRequestEntry];
@@ -352,6 +360,7 @@ function RefundPortalPage({ orderId }) {
           onSubmit={handleRefundTypeSubmit}
           hasSelectedItems={hasSelectedItems}
           submitting={submitting}
+          onRefundReasonSelect={handleRefundReasonSelection}
         />
 
         {lineItems.length === 0 && (
@@ -415,18 +424,28 @@ function LineItemCard({ item, selected, onCheckboxChange }) {
 }
 
 // Refund survey component
-function RefundSurvey({ onSubmit, hasSelectedItems, submitting }) {
+function RefundSurvey({
+  onSubmit,
+  hasSelectedItems,
+  submitting,
+  onRefundReasonSelect,
+}) {
   return (
     <>
       <s-text>Please fill in the refund survey</s-text>
       <s-stack gap="small" paddingBlock="small">
-        <s-choice-list>
-          <s-choice defaultSelected value="location-1">
-            Refund Reason
+        <s-choice-list
+          onChange={(e) => onRefundReasonSelect(e.currentTarget.values[0] ?? 0)}
+        >
+          <s-choice value="size-issues"> Size or fit issues </s-choice>
+          <s-choice value="damaged"> Damaged or defective items </s-choice>
+          <s-choice value="not-as-expected">
+            {" "}
+            Not as described or expected{" "}
           </s-choice>
-          <s-choice value="location-2"> Refund Reason</s-choice>
-          <s-choice value="location-3"> Refund Reason</s-choice>
-          <s-choice value="location-4"> Other</s-choice>
+          <s-choice value="shipping_issue">
+            Shipping/fulfillment problems
+          </s-choice>
         </s-choice-list>
         <s-button-group>
           <s-button
