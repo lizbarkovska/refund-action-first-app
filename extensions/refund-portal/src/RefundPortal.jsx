@@ -3,6 +3,9 @@ import "@shopify/ui-extensions/preact";
 import { render } from "preact";
 import { useState, useEffect } from "preact/hooks";
 import { signal } from "@preact/signals";
+import SelectRefundItems from "./SelectRefundItems.jsx";
+import SelectRefundReason from "./SelectRefundReason.jsx";
+import SelectRefundType from "./SelectRefundType.jsx";
 
 // State signals for order data
 const orderData = signal(null);
@@ -23,10 +26,11 @@ export default async () => {
 // Main page component
 function RefundPortalPage({ orderId }) {
   const [selectedItems, setSelectedItems] = useState({});
+  const [refundReason, setRefundReason] = useState("");
+  const [refundStep, setRefundStep] = useState(1);
+  const [submitError, setSubmitError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
-  const [refundReason, setRefundReason] = useState("");
 
   useEffect(() => {
     if (orderId) {
@@ -97,30 +101,52 @@ function RefundPortalPage({ orderId }) {
     }
   };
 
-  const handleCheckboxChange = (lineItemId, checked) => {
-    setSelectedItems((prev) => ({
-      ...prev,
-      [lineItemId]: checked,
-    }));
-  };
+  const MIN_STEP = 1;
+  const MAX_STEP = 3;
+  const handleStepNavigation = (navigationDirection) => {
+    // Validate current step before moving forward
+    if (navigationDirection === "next") {
+      if (refundStep === 1) {
+        // Validate items selected
+        const hasSelectedItems = Object.values(selectedItems).some(
+          (v) => v === true
+        );
+        if (!hasSelectedItems) {
+          setSubmitError("Please select at least one item for refund");
+          return; // Don't navigate
+        }
+        setSubmitError(null); // Clear error
+      } else if (refundStep === 2) {
+        // Validate reason selected
+        if (!refundReason || refundReason === "") {
+          setSubmitError("Please select a refund reason");
+          return; // Don't navigate
+        }
+        setSubmitError(null); // Clear error
+      }
 
-  const handleRefundReasonSelection = (refundReason) => {
-    setRefundReason(refundReason);
+      // Validation passed, move forward
+      if (refundStep < MAX_STEP) {
+        setRefundStep(refundStep + 1);
+      }
+    } else if (navigationDirection === "prev") {
+      // Going back doesn't need validation
+      if (refundStep > MIN_STEP) {
+        setRefundStep(refundStep - 1);
+        setSubmitError(null); // Clear errors when going back
+      }
+    }
   };
 
   const handleRefundTypeSubmit = async (refundType) => {
     console.log("obj", Object.entries(selectedItems));
-    // Validate: at least one item must be selected
+
+    // Extract selected item IDs (validation already done in step 1)
     const selectedItemIds = Object.entries(selectedItems)
       .filter(([_, checked]) => checked)
       .map(([id]) => id);
 
     console.log(selectedItemIds, "selected");
-
-    if (selectedItemIds.length === 0) {
-      setSubmitError(shopify.i18n.translate("selectItemsError"));
-      return;
-    }
 
     // Get the full line items data and map to variant ID + product name
     const lineItems = orderData.value?.lineItems?.edges || [];
@@ -277,7 +303,8 @@ function RefundPortalPage({ orderId }) {
     }
   };
 
-  // Success view - show after successful submission
+  const lineItems = orderData.value?.lineItems?.edges || [];
+
   if (submitted) {
     return (
       <s-page heading={shopify.i18n.translate("refundPortalTitle")}>
@@ -318,10 +345,6 @@ function RefundPortalPage({ orderId }) {
     );
   }
 
-  const lineItems = orderData.value?.lineItems?.edges || [];
-  const hasSelectedItems = Object.values(selectedItems).some((v) => v === true);
-  const refundReasonIndicated = refundReason !== "";
-
   return (
     <s-page
       heading={shopify.i18n.translate("refundPortalTitle")}
@@ -337,173 +360,39 @@ function RefundPortalPage({ orderId }) {
             maxInlineSize="800px"
             background="subdued"
           >
-            <s-heading>
-              {shopify.i18n.translate("selectItemsHeading")}
-            </s-heading>
-            <s-paragraph>
-              {shopify.i18n.translate("selectItemsInstructions")}
-            </s-paragraph>
-
-            {/* Show error banner if there's a submit error */}
-            {submitError && (
-              <s-banner>
-                <s-text>{submitError}</s-text>
-              </s-banner>
+            {refundStep === 1 && (
+              <SelectRefundItems
+                lineItems={lineItems}
+                selectedItems={selectedItems}
+                setSelectedItems={setSelectedItems}
+                onNavigate={handleStepNavigation}
+                submitError={submitError}
+              />
+            )}
+            {refundStep === 2 && (
+              <SelectRefundReason
+                onRefundReasonSelect={setRefundReason}
+                refundReason={refundReason}
+                onNavigate={handleStepNavigation}
+                submitError={submitError}
+              />
+            )}
+            {refundStep === 3 && (
+              <SelectRefundType
+                submitError={submitError}
+                submitting={submitting}
+                onSubmit={handleRefundTypeSubmit}
+                orderData={orderData}
+                onNavigate={handleStepNavigation}
+              />
             )}
 
-            <s-stack
-              background="base"
-              padding="large none large none"
-              maxInlineSize="900px"
-              direction="inline"
-              gap="base"
-            >
-              {lineItems.map(({ node: item }) => (
-                <LineItemCard
-                  key={item.id}
-                  item={item}
-                  selected={selectedItems[item.id] || false}
-                  onCheckboxChange={(checked) =>
-                    handleCheckboxChange(item.id, checked)
-                  }
-                />
-              ))}
-            </s-stack>
-
-            <RefundSurvey
-              onSubmit={handleRefundTypeSubmit}
-              hasSelectedItems={hasSelectedItems}
-              submitting={submitting}
-              onRefundReasonSelect={handleRefundReasonSelection}
-              refundReasonIndicated={refundReasonIndicated}
-            />
-
-            {lineItems.length === 0 && (
+            {refundStep === 1 && lineItems.length === 0 && (
               <s-text>No items available for return.</s-text>
             )}
           </s-box>
         </s-stack>
       </s-section>
     </s-page>
-  );
-}
-
-// Line item card component
-function LineItemCard({ item, selected, onCheckboxChange }) {
-  const formatPrice = (amount, currencyCode) => {
-    return `${parseFloat(amount).toFixed(2)} ${currencyCode}`;
-  };
-
-  return (
-    <s-box
-      padding="base"
-      background="subdued"
-      borderRadius="base"
-      borderWidth="base"
-    >
-      <s-stack gap="base" alignItems="center">
-        {/* Product Image */}
-        {item.image?.url && (
-          <s-box inlineSize="100px" blockSize="80px">
-            <s-image
-              src={item.image.url}
-              alt={item.image.altText || item.title}
-              aspectRatio="1"
-              objectFit="cover"
-              loading="lazy"
-              borderRadius="small"
-            />
-          </s-box>
-        )}
-
-        {/* Product Details */}
-        <s-stack
-          direction="block"
-          gap="tight"
-          inlineSize="fill"
-          alignItems="start"
-          padding="base none none small"
-        >
-          <s-text type="strong">{item.title}</s-text>
-
-          {item.variantTitle && (
-            <s-text appearance="subdued">{item.variantTitle}</s-text>
-          )}
-
-          <s-text>
-            {formatPrice(
-              item.currentTotalPrice.amount,
-              item.currentTotalPrice.currencyCode
-            )}{" "}
-            / {shopify.i18n.translate("quantityLabel")}: {item.quantity}
-          </s-text>
-          {/* Checkbox */}
-          <s-stack paddingBlockStart="small-100">
-            {" "}
-            <s-checkbox
-              checked={selected}
-              label="I'd like a refund"
-              onChange={(e) => onCheckboxChange(e.currentTarget.checked)}
-              accessibilityLabel={`Select ${item.title} for return`}
-            />
-          </s-stack>
-        </s-stack>
-      </s-stack>
-    </s-box>
-  );
-}
-
-// Refund survey component
-function RefundSurvey({
-  onSubmit,
-  hasSelectedItems,
-  submitting,
-  onRefundReasonSelect,
-  refundReasonIndicated,
-}) {
-  return (
-    <>
-      <s-heading>Please fill in the refund survey</s-heading>
-      <s-stack gap="small" paddingBlock="small">
-        <s-choice-list
-          onChange={(e) => onRefundReasonSelect(e.currentTarget.values[0] ?? 0)}
-        >
-          <s-choice value="size-issues"> Size or fit issues </s-choice>
-          <s-choice value="damaged"> Damaged or defective items </s-choice>
-          <s-choice value="not-as-expected">
-            {" "}
-            Not as described or expected{" "}
-          </s-choice>
-          <s-choice value="shipping_issue">
-            Shipping/fulfillment problems
-          </s-choice>
-        </s-choice-list>
-
-        <s-banner
-          heading="You can now choose how you'd like to receive your refund: either as money returned to your original payment method or as store credit. Simply select your preferred refund type during the process."
-          tone="info"
-        ></s-banner>
-        <s-button-group>
-          <s-button
-            slot="primary-action"
-            variant="primary"
-            onClick={() => onSubmit("Store Credit")}
-            disabled={submitting || !hasSelectedItems || !refundReasonIndicated}
-            loading={submitting}
-          >
-            {shopify.i18n.translate("requestStoreCreditButton")}
-          </s-button>
-          <s-button
-            slot="secondary-actions"
-            variant="secondary"
-            onClick={() => onSubmit("Refund")}
-            disabled={submitting || !hasSelectedItems}
-            loading={submitting}
-          >
-            {shopify.i18n.translate("requestRefundButton")}
-          </s-button>
-        </s-button-group>
-      </s-stack>
-    </>
   );
 }
