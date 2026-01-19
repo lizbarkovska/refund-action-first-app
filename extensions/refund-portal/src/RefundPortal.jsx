@@ -211,9 +211,16 @@ function RefundPortalPage({ orderId }) {
 
       const existingRequests = await fetchExistingRefundRequests();
 
-      const newRequestEntry = `ID: ${orderNumericId}; Refund method: ${refundType}; Refund Reason: ${refundReason}; Items to refund: ${JSON.stringify(
-        selectedItemsData
-      )}`;
+      const itemsString = selectedItemsData
+        .map(
+          (item) =>
+            `${item.productName}${
+              item.variantName ? ` (${item.variantName})` : ""
+            } - Variant ID: ${item.variantId}`
+        )
+        .join(", ");
+
+      const newRequestEntry = `ID: ${orderNumericId}; Refund method: ${refundType}; Refund Reason: ${refundReason}; Items to refund: ${itemsString}`;
 
       const updatedRequests = [...existingRequests, newRequestEntry];
 
