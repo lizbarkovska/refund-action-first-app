@@ -7,13 +7,13 @@ export default function SelectRefundReason({
   const refundReasonIndicated = refundReason !== "";
   return (
     <>
-      <s-heading>Please fill in the refund survey</s-heading>
+      <s-heading>Please fill in the refund survey:</s-heading>
       {submitError && (
         <s-banner status="critical">
           <s-text>{submitError}</s-text>
         </s-banner>
       )}
-      <s-stack gap="small" paddingBlock="small">
+      <s-stack gap="small" paddingBlock="large">
         <s-choice-list
           onChange={(e) => onRefundReasonSelect(e.currentTarget.values[0] ?? 0)}
         >

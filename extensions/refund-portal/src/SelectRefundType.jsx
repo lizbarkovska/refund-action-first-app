@@ -2,18 +2,17 @@ export default function SelectRefundType({
   submitError,
   submitting,
   onSubmit,
-  orderData,
   onNavigate,
 }) {
   return (
     <>
-      <s-heading>Please select the refund type</s-heading>
+      <s-heading>Please select the refund type </s-heading>
       {submitError && (
         <s-banner>
           <s-text>{submitError}</s-text>
         </s-banner>
       )}
-      <s-box paddingBlock="small">
+      <s-box paddingBlock="large">
         <s-paragraph>
           {" "}
           We're sorry the product didn't meet your expectations. We've received

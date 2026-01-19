@@ -1,4 +1,3 @@
-// Import Preact support for Shopify extensions
 import "@shopify/ui-extensions/preact";
 import { render } from "preact";
 import { useState, useEffect } from "preact/hooks";
@@ -7,14 +6,11 @@ import SelectRefundItems from "./SelectRefundItems.jsx";
 import SelectRefundReason from "./SelectRefundReason.jsx";
 import SelectRefundType from "./SelectRefundType.jsx";
 
-// State signals for order data
 const orderData = signal(null);
 const loading = signal(true);
 const error = signal(null);
 
-// Main entry point - Shopify calls this function
 export default async () => {
-  // Get navigation state with order ID
   const navigationState = navigation.currentEntry.getState() || {};
   console.log("statenav", navigationState);
   const orderId = navigationState.orderId;
@@ -58,6 +54,8 @@ function RefundPortalPage({ orderId }) {
                   title
                   quantity
                   variantId
+                  variantTitle
+                  refundableQuantity
                   image {
                     url
                     altText
@@ -66,7 +64,6 @@ function RefundPortalPage({ orderId }) {
                     amount
                     currencyCode
                   }
-                  variantTitle
                 }
               }
             }
@@ -104,36 +101,31 @@ function RefundPortalPage({ orderId }) {
   const MIN_STEP = 1;
   const MAX_STEP = 3;
   const handleStepNavigation = (navigationDirection) => {
-    // Validate current step before moving forward
     if (navigationDirection === "next") {
       if (refundStep === 1) {
-        // Validate items selected
         const hasSelectedItems = Object.values(selectedItems).some(
           (v) => v === true
         );
         if (!hasSelectedItems) {
           setSubmitError("Please select at least one item for refund");
-          return; // Don't navigate
+          return;
         }
-        setSubmitError(null); // Clear error
+        setSubmitError(null);
       } else if (refundStep === 2) {
-        // Validate reason selected
         if (!refundReason || refundReason === "") {
           setSubmitError("Please select a refund reason");
-          return; // Don't navigate
+          return;
         }
-        setSubmitError(null); // Clear error
+        setSubmitError(null);
       }
 
-      // Validation passed, move forward
       if (refundStep < MAX_STEP) {
         setRefundStep(refundStep + 1);
       }
     } else if (navigationDirection === "prev") {
-      // Going back doesn't need validation
       if (refundStep > MIN_STEP) {
         setRefundStep(refundStep - 1);
-        setSubmitError(null); // Clear errors when going back
+        setSubmitError(null);
       }
     }
   };
@@ -141,23 +133,26 @@ function RefundPortalPage({ orderId }) {
   const handleRefundTypeSubmit = async (refundType) => {
     console.log("obj", Object.entries(selectedItems));
 
-    // Extract selected item IDs (validation already done in step 1)
     const selectedItemIds = Object.entries(selectedItems)
       .filter(([_, checked]) => checked)
       .map(([id]) => id);
 
     console.log(selectedItemIds, "selected");
 
-    // Get the full line items data and map to variant ID + product name
     const lineItems = orderData.value?.lineItems?.edges || [];
     const selectedItemsData = selectedItemIds
       .map((lineItemId) => {
         const lineItem = lineItems.find(({ node }) => node.id === lineItemId);
         if (!lineItem) return null;
 
+        const variantIdNumeric = lineItem.node.variantId
+          ? lineItem.node.variantId.split("/").pop()
+          : null;
+
         return {
-          variantId: lineItem.node.variantId || null,
-          productName: lineItem.node.title,
+          variantId: variantIdNumeric,
+          productName: lineItem.node.title || null,
+          variantName: lineItem.node.variantTitle || null,
         };
       })
       .filter((item) => item !== null);
@@ -192,7 +187,6 @@ function RefundPortalPage({ orderId }) {
         throw new Error(result.errors[0].message);
       }
 
-      // Parse existing value or return empty array
       const existingValue = result.data?.customer?.metafield?.value;
       return existingValue ? JSON.parse(existingValue) : [];
     };
@@ -202,10 +196,8 @@ function RefundPortalPage({ orderId }) {
 
     try {
       // Use Customer Account API to write customer metafields
-      // Get current customer ID and construct the GID format
       const customerNumericId = shopify.authenticatedAccount.customer.value.id;
 
-      // Shopify GraphQL requires GID format: gid://shopify/Customer/123456
       const customerGID = `gid://shopify/Customer/${customerNumericId}`;
 
       console.log("Customer numeric ID:", customerNumericId);
@@ -215,18 +207,14 @@ function RefundPortalPage({ orderId }) {
         throw new Error("Unable to get customer ID");
       }
 
-      // Extract numeric order ID from GID format (gid://shopify/Order/123456 -> 123456)
       const orderNumericId = orderId.split("/").pop();
 
-      // Fetch existing refund requests
       const existingRequests = await fetchExistingRefundRequests();
 
-      // Create new refund request entry (semicolon-delimited)
-      const newRequestEntry = `ID: ${orderId}; refund method: ${refundType};reason: ${refundReason}; items: ${JSON.stringify(
+      const newRequestEntry = `ID: ${orderNumericId}; Refund method: ${refundType}; Refund Reason: ${refundReason}; Items to refund: ${JSON.stringify(
         selectedItemsData
       )}`;
 
-      // Append to existing requests
       const updatedRequests = [...existingRequests, newRequestEntry];
 
       console.log("Submitting refund request:", {
@@ -241,7 +229,6 @@ function RefundPortalPage({ orderId }) {
       });
 
       // GraphQL mutation to set refund_requests array metafield
-      // This works for both creating new metafields AND updating existing ones
       const mutation = `
         mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
           metafieldsSet(metafields: $metafields) {
@@ -308,6 +295,7 @@ function RefundPortalPage({ orderId }) {
   if (submitted) {
     return (
       <s-page heading={shopify.i18n.translate("refundPortalTitle")}>
+        <s-link href="shopify:customer-account/orders">Back to Orders</s-link>
         <s-section>
           <s-banner tone="success">
             <s-heading>{shopify.i18n.translate("successHeading")}</s-heading>
@@ -355,15 +343,11 @@ function RefundPortalPage({ orderId }) {
       heading={shopify.i18n.translate("refundPortalTitle")}
       subheading={`Order ${orderData.value?.name || ""}`}
     >
+      <s-link href="shopify:customer-account/orders">Back to Orders</s-link>
       <s-section>
         {" "}
         <s-stack alignItems="center">
-          <s-box
-            border="base base solid"
-            borderRadius="base"
-            padding="base base base base"
-            maxInlineSize="800px"
-          >
+          <s-box padding="base base base base" maxInlineSize="800px">
             {refundStep === 1 && (
               <SelectRefundItems
                 lineItems={lineItems}
@@ -386,7 +370,6 @@ function RefundPortalPage({ orderId }) {
                 submitError={submitError}
                 submitting={submitting}
                 onSubmit={handleRefundTypeSubmit}
-                orderData={orderData}
                 onNavigate={handleStepNavigation}
               />
             )}

@@ -12,16 +12,21 @@ export default function SelectRefundItems({
     }));
   };
 
+  const refundableItems = lineItems.filter(({ node: item }) => {
+    const refundedQty = item.refundableQuantity;
+    return refundedQty > 0;
+  });
+
   const hasSelectedItems = Object.values(selectedItems).some((v) => v === true);
   return (
     <>
       {" "}
       <s-heading>{shopify.i18n.translate("selectItemsHeading")}</s-heading>
-      <s-paragraph>
+      {/* <s-paragraph>
         {shopify.i18n.translate("selectItemsInstructions")}
-      </s-paragraph>
+      </s-paragraph> */}
       {submitError && (
-        <s-banner status="critical">
+        <s-banner tone="critical">
           <s-text>{submitError}</s-text>
         </s-banner>
       )}
@@ -31,7 +36,7 @@ export default function SelectRefundItems({
         direction="inline"
         gap="base"
       >
-        {lineItems.map(({ node: item }) => (
+        {refundableItems.map(({ node: item }) => (
           <LineItemCard
             key={item.id}
             item={item}
@@ -63,7 +68,11 @@ function LineItemCard({ item, selected, onCheckboxChange }) {
   };
 
   return (
-    <s-box padding="base" borderRadius="base" borderWidth="base">
+    <s-box
+      padding="large base base base"
+      borderRadius="base"
+      borderWidth="base"
+    >
       <s-stack gap="base" alignItems="center">
         {/* Product Image */}
         {item.image?.url && (
