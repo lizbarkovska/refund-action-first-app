@@ -309,10 +309,15 @@ function RefundPortalPage({ orderId }) {
     return (
       <s-page heading={shopify.i18n.translate("refundPortalTitle")}>
         <s-section>
-          <s-banner>
+          <s-banner tone="success">
             <s-heading>{shopify.i18n.translate("successHeading")}</s-heading>
           </s-banner>
-          <s-paragraph>{shopify.i18n.translate("successMessage")}</s-paragraph>
+          <s-box paddingBlock="small">
+            {" "}
+            <s-paragraph>
+              {shopify.i18n.translate("successMessage")}
+            </s-paragraph>
+          </s-box>
         </s-section>
       </s-page>
     );
@@ -358,7 +363,6 @@ function RefundPortalPage({ orderId }) {
             borderRadius="base"
             padding="base base base base"
             maxInlineSize="800px"
-            background="subdued"
           >
             {refundStep === 1 && (
               <SelectRefundItems

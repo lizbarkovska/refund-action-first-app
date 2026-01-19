@@ -28,15 +28,20 @@ export default function SelectRefundReason({
           </s-choice>
         </s-choice-list>
       </s-stack>
-      <s-button-group>
-        <s-button onClick={() => onNavigate("prev")}>Prev</s-button>
+
+      <s-stack direction="inline" justifyContent="end" gap="small">
+        {" "}
+        <s-button variant="secondary" onClick={() => onNavigate("prev")}>
+          Back
+        </s-button>
         <s-button
+          variant="primary"
           onClick={() => onNavigate("next")}
           disabled={!refundReasonIndicated}
         >
           Next
         </s-button>
-      </s-button-group>
+      </s-stack>
     </>
   );
 }

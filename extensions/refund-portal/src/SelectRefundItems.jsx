@@ -26,7 +26,6 @@ export default function SelectRefundItems({
         </s-banner>
       )}
       <s-stack
-        background="base"
         padding="large none large none"
         maxInlineSize="900px"
         direction="inline"
@@ -43,9 +42,16 @@ export default function SelectRefundItems({
           />
         ))}
       </s-stack>
-      <s-button onClick={() => onNavigate("next")} disabled={!hasSelectedItems}>
-        Next
-      </s-button>
+      <s-stack direction="inline" justifyContent="end">
+        {" "}
+        <s-button
+          variant="primary"
+          onClick={() => onNavigate("next")}
+          disabled={!hasSelectedItems}
+        >
+          Next
+        </s-button>
+      </s-stack>
     </>
   );
 }
@@ -57,12 +63,7 @@ function LineItemCard({ item, selected, onCheckboxChange }) {
   };
 
   return (
-    <s-box
-      padding="base"
-      background="subdued"
-      borderRadius="base"
-      borderWidth="base"
-    >
+    <s-box padding="base" borderRadius="base" borderWidth="base">
       <s-stack gap="base" alignItems="center">
         {/* Product Image */}
         {item.image?.url && (

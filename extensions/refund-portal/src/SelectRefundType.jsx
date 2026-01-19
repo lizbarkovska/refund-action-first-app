@@ -7,19 +7,23 @@ export default function SelectRefundType({
 }) {
   return (
     <>
-      <s-banner
-        heading="You can now choose how you'd like to receive your refund: either as money returned to your original payment method or as store credit. Simply select your preferred refund type during the process."
-        tone="info"
-      ></s-banner>
+      <s-heading>Please select the refund type</s-heading>
       {submitError && (
         <s-banner>
           <s-text>{submitError}</s-text>
         </s-banner>
       )}
+      <s-box paddingBlock="small">
+        <s-paragraph>
+          {" "}
+          We're sorry the product didn't meet your expectations. We've received
+          your refund request, and our administrator will review it shortly.
+          Meanwhile please choose your refund option. Store credit can be used
+          anytime toward another product, while money back is returned to your
+          original payment method and may take a few business days to process.
+        </s-paragraph>
+      </s-box>
       <s-button-group>
-        <s-button onClick={() => onNavigate("prev")} disabled={submitting}>
-          Back
-        </s-button>
         <s-button
           slot="primary-action"
           variant="primary"
@@ -39,6 +43,12 @@ export default function SelectRefundType({
           {shopify.i18n.translate("requestRefundButton")}
         </s-button>
       </s-button-group>
+      <s-stack direction="inline" justifyContent="end" paddingBlock="small">
+        {" "}
+        <s-button variant="secondary" onClick={() => onNavigate("prev")}>
+          Back
+        </s-button>
+      </s-stack>
     </>
   );
 }
