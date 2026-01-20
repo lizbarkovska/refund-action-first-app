@@ -32,9 +32,9 @@ export default function SelectRefundItems({
       )}
       <s-stack
         padding="large none large none"
-        maxInlineSize="900px"
         direction="inline"
-        gap="base"
+        gap="large"
+        maxInlineSize="634px"
       >
         {refundableItems.map(({ node: item }) => (
           <LineItemCard
@@ -72,6 +72,7 @@ function LineItemCard({ item, selected, onCheckboxChange }) {
       padding="large base base base"
       borderRadius="base"
       borderWidth="base"
+      inlineSize="200px"
     >
       <s-stack gap="base" alignItems="center">
         {/* Product Image */}
@@ -105,7 +106,7 @@ function LineItemCard({ item, selected, onCheckboxChange }) {
           <s-text>
             {formatPrice(
               item.currentTotalPrice.amount,
-              item.currentTotalPrice.currencyCode
+              item.currentTotalPrice.currencyCode,
             )}{" "}
             / {shopify.i18n.translate("quantityLabel")}: {item.quantity}
           </s-text>
