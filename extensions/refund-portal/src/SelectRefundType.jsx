@@ -22,26 +22,32 @@ export default function SelectRefundType({
           original payment method and may take a few business days to process.
         </s-paragraph>
       </s-box>
-      <s-button-group>
-        <s-button
-          slot="primary-action"
-          variant="primary"
-          onClick={() => onSubmit("Store Credit")}
-          disabled={submitting}
-          loading={submitting}
-        >
-          {shopify.i18n.translate("requestStoreCreditButton")}
-        </s-button>
-        <s-button
-          slot="secondary-actions"
-          variant="secondary"
-          onClick={() => onSubmit("Refund")}
-          disabled={submitting}
-          loading={submitting}
-        >
-          {shopify.i18n.translate("requestRefundButton")}
-        </s-button>
-      </s-button-group>
+      <s-stack justifyContent="center" alignItems="center" rowGap="small">
+        <s-box inlineSize="170px">
+          {" "}
+          <s-button
+            inlineSize="fill"
+            variant="primary"
+            onClick={() => onSubmit("Store Credit")}
+            disabled={submitting}
+            loading={submitting}
+          >
+            {shopify.i18n.translate("requestStoreCreditButton")}
+          </s-button>
+        </s-box>
+        <s-box inlineSize="170px">
+          {" "}
+          <s-button
+            inlineSize="fill"
+            variant="secondary"
+            onClick={() => onSubmit("Refund")}
+            disabled={submitting}
+            loading={submitting}
+          >
+            {shopify.i18n.translate("requestRefundButton")}
+          </s-button>
+        </s-box>
+      </s-stack>
       <s-stack direction="inline" justifyContent="end" paddingBlock="small">
         {" "}
         <s-button variant="secondary" onClick={() => onNavigate("prev")}>

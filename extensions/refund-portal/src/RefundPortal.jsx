@@ -12,10 +12,8 @@ const error = signal(null);
 
 export default async () => {
   const navigationState = navigation.currentEntry.getState() || {};
-  console.log("statenav", navigationState);
   const orderId = navigationState.orderId;
 
-  console.log("id", orderId);
   render(<RefundPortalPage orderId={orderId} />, document.body);
 };
 
@@ -80,7 +78,7 @@ function RefundPortalPage({ orderId }) {
             query,
             variables: { orderId: id },
           }),
-        }
+        },
       );
 
       const result = await response.json();
@@ -90,7 +88,6 @@ function RefundPortalPage({ orderId }) {
       }
 
       orderData.value = result.data.order;
-      console.log(orderData.value, "order data");
     } catch (err) {
       error.value = err.message || "Failed to load order details";
     } finally {
@@ -104,7 +101,7 @@ function RefundPortalPage({ orderId }) {
     if (navigationDirection === "next") {
       if (refundStep === 1) {
         const hasSelectedItems = Object.values(selectedItems).some(
-          (v) => v === true
+          (v) => v === true,
         );
         if (!hasSelectedItems) {
           setSubmitError("Please select at least one item for refund");
@@ -131,13 +128,9 @@ function RefundPortalPage({ orderId }) {
   };
 
   const handleRefundTypeSubmit = async (refundType) => {
-    console.log("obj", Object.entries(selectedItems));
-
     const selectedItemIds = Object.entries(selectedItems)
       .filter(([_, checked]) => checked)
       .map(([id]) => id);
-
-    console.log(selectedItemIds, "selected");
 
     const lineItems = orderData.value?.lineItems?.edges || [];
     const selectedItemsData = selectedItemIds
@@ -156,8 +149,6 @@ function RefundPortalPage({ orderId }) {
         };
       })
       .filter((item) => item !== null);
-
-    console.log("Selected items data:", selectedItemsData);
 
     // Helper function to fetch existing refund requests
     const fetchExistingRefundRequests = async () => {
@@ -179,7 +170,7 @@ function RefundPortalPage({ orderId }) {
           body: JSON.stringify({
             query,
           }),
-        }
+        },
       );
 
       const result = await response.json();
@@ -200,9 +191,6 @@ function RefundPortalPage({ orderId }) {
 
       const customerGID = `gid://shopify/Customer/${customerNumericId}`;
 
-      console.log("Customer numeric ID:", customerNumericId);
-      console.log("Customer GID:", customerGID);
-
       if (!customerNumericId) {
         throw new Error("Unable to get customer ID");
       }
@@ -216,24 +204,13 @@ function RefundPortalPage({ orderId }) {
           (item) =>
             `${item.productName}${
               item.variantName ? ` (${item.variantName})` : ""
-            } - Variant ID: ${item.variantId}`
+            } - Variant ID: ${item.variantId}`,
         )
         .join(", ");
 
       const newRequestEntry = `ID: ${orderNumericId}; Refund method: ${refundType}; Refund Reason: ${refundReason}; Items to refund: ${itemsString}`;
 
       const updatedRequests = [...existingRequests, newRequestEntry];
-
-      console.log("Submitting refund request:", {
-        customerGID,
-        orderId,
-        orderNumericId,
-        refundType,
-        itemCount: selectedItemsData.length,
-        existingRequestsCount: existingRequests.length,
-        newRequestEntry,
-        totalRequests: updatedRequests.length,
-      });
 
       // GraphQL mutation to set refund_requests array metafield
       const mutation = `
@@ -271,11 +248,10 @@ function RefundPortalPage({ orderId }) {
               ],
             },
           }),
-        }
+        },
       );
 
       const result = await response.json();
-      console.log("Metafield mutation result:", result);
 
       // Check for errors
       if (result.errors) {
@@ -287,7 +263,6 @@ function RefundPortalPage({ orderId }) {
       }
 
       // Success!
-      console.log("Refund request saved to customer metafield successfully");
       setSubmitted(true);
     } catch (err) {
       console.error("Refund submission error:", err);
@@ -334,7 +309,7 @@ function RefundPortalPage({ orderId }) {
     return (
       <s-page heading={shopify.i18n.translate("refundPortalTitle")}>
         <s-section>
-          <s-banner status="critical">
+          <s-banner tone="critical">
             <s-text>{error.value}</s-text>
           </s-banner>
           {!orderId && (
