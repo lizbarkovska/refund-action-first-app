@@ -1,5 +1,6 @@
 export default function SelectRefundItems({
   lineItems,
+  returns,
   selectedItems,
   setSelectedItems,
   onNavigate,
@@ -12,11 +13,27 @@ export default function SelectRefundItems({
     }));
   };
 
-  const refundableItems = lineItems.filter(({ node: item }) => {
-    const refundedQty = item.refundableQuantity;
-    return refundedQty > 0;
+  // Build a set of line item IDs that already have return requests
+  const returnedLineItemIds = new Set();
+  returns.forEach(({ node: returnNode }) => {
+    returnNode.returnLineItems?.edges?.forEach(({ node: returnLineItem }) => {
+      const lineItemId = returnLineItem.lineItem?.id;
+      if (lineItemId) {
+        returnedLineItemIds.add(lineItemId);
+      }
+    });
   });
+
+  // Filter out items that have refundableQuantity > 0 AND don't have a return request
+  const refundableItems = lineItems.filter(({ node: item }) => {
+    const hasRefundableQty = item.refundableQuantity > 0;
+    const hasReturnRequest = returnedLineItemIds.has(item.id);
+    return hasRefundableQty && !hasReturnRequest;
+  });
+
   console.log(lineItems, "lineItems");
+  console.log(returnedLineItemIds, "returnedLineItemIds");
+  console.log(refundableItems, "refundableItems");
 
   const hasSelectedItems = Object.values(selectedItems).some((v) => v === true);
   return (
@@ -31,33 +48,46 @@ export default function SelectRefundItems({
           <s-text>{submitError}</s-text>
         </s-banner>
       )}
-      <s-stack
-        padding="large none large none"
-        direction="inline"
-        gap="large"
-        maxInlineSize="634px"
-      >
-        {refundableItems.map(({ node: item }) => (
-          <LineItemCard
-            key={item.id}
-            item={item}
-            selected={selectedItems[item.id] || false}
-            onCheckboxChange={(checked) =>
-              handleCheckboxChange(item.id, checked)
-            }
-          />
-        ))}
-      </s-stack>
-      <s-stack direction="inline" justifyContent="end">
-        {" "}
-        <s-button
-          variant="primary"
-          onClick={() => onNavigate("next")}
-          disabled={!hasSelectedItems}
-        >
-          Next
-        </s-button>
-      </s-stack>
+
+      {refundableItems.length === 0 ? (
+        <s-box paddingBlock="large">
+          <s-banner tone="info">
+            <s-text>
+              All items in this order have either been refunded or have a pending refund request.
+            </s-text>
+          </s-banner>
+        </s-box>
+      ) : (
+        <>
+          <s-stack
+            padding="large none large none"
+            direction="inline"
+            gap="large"
+            maxInlineSize="634px"
+          >
+            {refundableItems.map(({ node: item }) => (
+              <LineItemCard
+                key={item.id}
+                item={item}
+                selected={selectedItems[item.id] || false}
+                onCheckboxChange={(checked) =>
+                  handleCheckboxChange(item.id, checked)
+                }
+              />
+            ))}
+          </s-stack>
+          <s-stack direction="inline" justifyContent="end">
+            {" "}
+            <s-button
+              variant="primary"
+              onClick={() => onNavigate("next")}
+              disabled={!hasSelectedItems}
+            >
+              Next
+            </s-button>
+          </s-stack>
+        </>
+      )}
     </>
   );
 }

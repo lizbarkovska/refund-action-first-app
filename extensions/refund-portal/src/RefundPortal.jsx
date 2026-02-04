@@ -76,6 +76,21 @@ function RefundPortalPage({ orderId }) {
                 }
               }
             }
+            returns(first: 50) {
+              edges {
+                node {
+                  returnLineItems(first: 50) {
+                    edges {
+                      node {
+                        lineItem {
+                          id
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       `;
@@ -98,6 +113,7 @@ function RefundPortalPage({ orderId }) {
         throw new Error(result.errors[0].message);
       }
 
+      console.log(result);
       orderData.value = result.data.order;
     } catch (err) {
       error.value = err.message || "Failed to load order details";
@@ -352,6 +368,7 @@ function RefundPortalPage({ orderId }) {
   };
 
   const lineItems = orderData.value?.lineItems?.edges || [];
+  const returns = orderData.value?.returns?.edges || [];
 
   if (submitted) {
     return (
@@ -412,6 +429,7 @@ function RefundPortalPage({ orderId }) {
             {refundStep === 1 && (
               <SelectRefundItems
                 lineItems={lineItems}
+                returns={returns}
                 selectedItems={selectedItems}
                 setSelectedItems={setSelectedItems}
                 onNavigate={handleStepNavigation}
