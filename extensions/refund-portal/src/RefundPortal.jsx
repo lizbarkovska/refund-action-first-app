@@ -10,6 +10,17 @@ const orderData = signal(null);
 const loading = signal(true);
 const error = signal(null);
 
+const REFUND_REASON_MAP = {
+  "size-too-big": "gid://shopify/ReturnReasonDefinition/8",
+  "size-too-small": "gid://shopify/ReturnReasonDefinition/7",
+  color: "gid://shopify/ReturnReasonDefinition/10",
+  "changed-mind": "gid://shopify/ReturnReasonDefinition/2",
+  "not-as-described": "gid://shopify/ReturnReasonDefinition/3",
+  "wrong-item": "gid://shopify/ReturnReasonDefinition/4",
+  damaged: "gid://shopify/ReturnReasonDefinition/6",
+  other: "gid://shopify/ReturnReasonDefinition/5",
+};
+
 export default async () => {
   const navigationState = navigation.currentEntry.getState() || {};
   const orderId = navigationState.orderId;
@@ -126,6 +137,70 @@ function RefundPortalPage({ orderId }) {
       }
     }
   };
+  const setRefundStatus = async () => {
+    // Get ALL selected item IDs
+    const selectedItemIds = Object.entries(selectedItems)
+      .filter(([_, checked]) => checked)
+      .map(([id]) => id);
+
+    const reasonGid = REFUND_REASON_MAP[refundReason];
+
+    if (!reasonGid) {
+      throw new Error(`Invalid refund reason: ${refundReason}`);
+    }
+    const mutation = `
+      mutation orderRequestReturn($orderId: ID!, $requestedLineItems: [RequestedLineItemInput!]!) {
+      orderRequestReturn(orderId: $orderId, requestedLineItems: $requestedLineItems) {
+        return {
+          id
+          status
+          returnLineItems(first: 10) {
+            edges {
+              node {
+                id
+                quantity
+                returnReasonDefinition {
+                  handle
+                  name
+                  deleted
+                }
+              }
+            }
+          }
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }
+    `;
+
+    const response = await fetch(
+      "shopify://customer-account/api/2026-01/graphql.json",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: mutation,
+          variables: {
+            orderId: orderId,
+            // Map over ALL selected items
+            requestedLineItems: selectedItemIds.map((lineItemId) => ({
+              lineItemId: lineItemId,
+              quantity: 1,
+              returnReasonDefinitionId: reasonGid,
+              customerNote: "",
+            })),
+          },
+        }),
+      },
+    );
+
+    const result = await response.json();
+    console.log("orderRequestReturn result:", result);
+    return result;
+  };
 
   const handleRefundTypeSubmit = async (refundType) => {
     const selectedItemIds = Object.entries(selectedItems)
@@ -198,6 +273,7 @@ function RefundPortalPage({ orderId }) {
       const orderNumericId = orderId.split("/").pop();
 
       const existingRequests = await fetchExistingRefundRequests();
+      console.log(selectedItems, "selected");
 
       const itemsString = selectedItemsData
         .map(
@@ -261,6 +337,9 @@ function RefundPortalPage({ orderId }) {
       if (result.data?.metafieldsSet?.userErrors?.length > 0) {
         throw new Error(result.data.metafieldsSet.userErrors[0].message);
       }
+
+      // Test the orderRequestReturn mutation
+      await setRefundStatus();
 
       // Success!
       setSubmitted(true);

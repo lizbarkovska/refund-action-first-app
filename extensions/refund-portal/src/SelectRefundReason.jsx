@@ -9,7 +9,7 @@ export default function SelectRefundReason({
     <>
       <s-heading>Please fill in the refund survey:</s-heading>
       {submitError && (
-        <s-banner status="critical">
+        <s-banner tone="critical">
           <s-text>{submitError}</s-text>
         </s-banner>
       )}
@@ -17,15 +17,14 @@ export default function SelectRefundReason({
         <s-choice-list
           onChange={(e) => onRefundReasonSelect(e.currentTarget.values[0] ?? 0)}
         >
-          <s-choice value="size-issues"> Size or fit issues </s-choice>
-          <s-choice value="damaged"> Damaged or defective items </s-choice>
-          <s-choice value="not-as-expected">
-            {" "}
-            Not as described or expected{" "}
-          </s-choice>
-          <s-choice value="shipping_issue">
-            Shipping/fulfillment problems
-          </s-choice>
+          <s-choice value="size-too-big"> Too big </s-choice>
+          <s-choice value="size-too-small"> Too small </s-choice>
+          <s-choice value="color"> Color </s-choice>
+          <s-choice value="changed-mind"> Changed my mind </s-choice>
+          <s-choice value="not-as-described"> Item not as described </s-choice>
+          <s-choice value="wrong-item"> Received the wrong item </s-choice>
+          <s-choice value="damaged"> Damaged or defective </s-choice>
+          <s-choice value="other"> Other </s-choice>
         </s-choice-list>
       </s-stack>
 

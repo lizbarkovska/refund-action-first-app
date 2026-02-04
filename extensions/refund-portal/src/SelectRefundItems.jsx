@@ -16,6 +16,7 @@ export default function SelectRefundItems({
     const refundedQty = item.refundableQuantity;
     return refundedQty > 0;
   });
+  console.log(lineItems, "lineItems");
 
   const hasSelectedItems = Object.values(selectedItems).some((v) => v === true);
   return (
