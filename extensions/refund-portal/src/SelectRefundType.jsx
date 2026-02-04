@@ -40,7 +40,7 @@ export default function SelectRefundType({
           <s-button
             inlineSize="fill"
             variant="secondary"
-            onClick={() => onSubmit("Refund")}
+            onClick={() => onSubmit("Refund to original payment method")}
             disabled={submitting}
             loading={submitting}
           >

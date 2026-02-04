@@ -213,7 +213,7 @@ function RefundPortalPage({ orderId }) {
     const lineItems = orderData.value?.lineItems?.edges || [];
     console.log(refundReason, "reason");
     const returnNote = refundReason.includes("other")
-      ? `${refundType}, reason - ${refundReason}`
+      ? `${refundType}; Return Reason - ${refundReason}`
       : refundType;
 
     const response = await fetch(
