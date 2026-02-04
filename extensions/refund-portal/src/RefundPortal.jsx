@@ -91,6 +91,22 @@ function RefundPortalPage({ orderId }) {
                 }
               }
             }
+            fulfillments(first: 50) {
+              edges {
+                node {
+                  fulfillmentLineItems(first: 50) {
+                    edges {
+                      node {
+                        lineItem {
+                          id
+                        }
+                        quantity
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       `;
@@ -113,7 +129,6 @@ function RefundPortalPage({ orderId }) {
         throw new Error(result.errors[0].message);
       }
 
-      console.log(result);
       orderData.value = result.data.order;
     } catch (err) {
       error.value = err.message || "Failed to load order details";
@@ -153,13 +168,16 @@ function RefundPortalPage({ orderId }) {
       }
     }
   };
-  const setRefundStatus = async () => {
+  const setRefundStatus = async (refundType) => {
     // Get ALL selected item IDs
     const selectedItemIds = Object.entries(selectedItems)
       .filter(([_, checked]) => checked)
       .map(([id]) => id);
 
-    const reasonGid = REFUND_REASON_MAP[refundReason];
+    const reasonKey = refundReason.startsWith("other:")
+      ? "other"
+      : refundReason;
+    const reasonGid = REFUND_REASON_MAP[reasonKey];
 
     if (!reasonGid) {
       throw new Error(`Invalid refund reason: ${refundReason}`);
@@ -193,6 +211,10 @@ function RefundPortalPage({ orderId }) {
     `;
 
     const lineItems = orderData.value?.lineItems?.edges || [];
+    console.log(refundReason, "reason");
+    const returnNote = refundReason.includes("other")
+      ? `${refundType}, reason - ${refundReason}`
+      : refundType;
 
     const response = await fetch(
       "shopify://customer-account/api/2026-01/graphql.json",
@@ -205,13 +227,15 @@ function RefundPortalPage({ orderId }) {
             orderId: orderId,
             // Map over ALL selected items
             requestedLineItems: selectedItemIds.map((lineItemId) => {
-              const lineItem = lineItems.find(({ node }) => node.id === lineItemId);
+              const lineItem = lineItems.find(
+                ({ node }) => node.id === lineItemId,
+              );
               const quantity = lineItem?.node?.refundableQuantity || 1;
               return {
                 lineItemId: lineItemId,
                 quantity,
                 returnReasonDefinitionId: reasonGid,
-                customerNote: "",
+                customerNote: returnNote,
               };
             }),
           },
@@ -295,7 +319,6 @@ function RefundPortalPage({ orderId }) {
       const orderNumericId = orderId.split("/").pop();
 
       const existingRequests = await fetchExistingRefundRequests();
-      console.log(selectedItems, "selected");
 
       const itemsString = selectedItemsData
         .map(
@@ -361,7 +384,7 @@ function RefundPortalPage({ orderId }) {
       }
 
       // Test the orderRequestReturn mutation
-      await setRefundStatus();
+      await setRefundStatus(refundType);
 
       // Success!
       setSubmitted(true);
@@ -375,6 +398,26 @@ function RefundPortalPage({ orderId }) {
 
   const lineItems = orderData.value?.lineItems?.edges || [];
   const returns = orderData.value?.returns?.edges || [];
+
+  // Build set of fulfilled line item IDs
+  const fulfilledLineItemIds = new Set();
+  (orderData.value?.fulfillments?.edges || []).forEach(
+    ({ node: fulfillment }) => {
+      (fulfillment.fulfillmentLineItems?.edges || []).forEach(
+        ({ node: fli }) => {
+          if (fli.lineItem?.id && fli.quantity > 0) {
+            fulfilledLineItemIds.add(fli.lineItem.id);
+          }
+        },
+      );
+    },
+  );
+
+  // Only show fulfilled items in the refund selection
+  const fulfilledLineItems =
+    fulfilledLineItemIds.size > 0
+      ? lineItems.filter(({ node }) => fulfilledLineItemIds.has(node.id))
+      : [];
 
   if (submitted) {
     return (
@@ -434,7 +477,7 @@ function RefundPortalPage({ orderId }) {
           <s-box padding="base base base base" maxInlineSize="800px">
             {refundStep === 1 && (
               <SelectRefundItems
-                lineItems={lineItems}
+                lineItems={fulfilledLineItems}
                 returns={returns}
                 selectedItems={selectedItems}
                 setSelectedItems={setSelectedItems}
@@ -459,7 +502,7 @@ function RefundPortalPage({ orderId }) {
               />
             )}
 
-            {refundStep === 1 && lineItems.length === 0 && (
+            {refundStep === 1 && fulfilledLineItems.length === 0 && (
               <s-text>No items available for return.</s-text>
             )}
           </s-box>

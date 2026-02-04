@@ -31,10 +31,6 @@ export default function SelectRefundItems({
     return hasRefundableQty && !hasReturnRequest;
   });
 
-  console.log(lineItems, "lineItems");
-  console.log(returnedLineItemIds, "returnedLineItemIds");
-  console.log(refundableItems, "refundableItems");
-
   const hasSelectedItems = Object.values(selectedItems).some((v) => v === true);
   return (
     <>
