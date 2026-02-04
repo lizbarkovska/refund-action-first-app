@@ -192,6 +192,8 @@ function RefundPortalPage({ orderId }) {
     }
     `;
 
+    const lineItems = orderData.value?.lineItems?.edges || [];
+
     const response = await fetch(
       "shopify://customer-account/api/2026-01/graphql.json",
       {
@@ -202,12 +204,16 @@ function RefundPortalPage({ orderId }) {
           variables: {
             orderId: orderId,
             // Map over ALL selected items
-            requestedLineItems: selectedItemIds.map((lineItemId) => ({
-              lineItemId: lineItemId,
-              quantity: 1,
-              returnReasonDefinitionId: reasonGid,
-              customerNote: "",
-            })),
+            requestedLineItems: selectedItemIds.map((lineItemId) => {
+              const lineItem = lineItems.find(({ node }) => node.id === lineItemId);
+              const quantity = lineItem?.node?.refundableQuantity || 1;
+              return {
+                lineItemId: lineItemId,
+                quantity,
+                returnReasonDefinitionId: reasonGid,
+                customerNote: "",
+              };
+            }),
           },
         }),
       },
