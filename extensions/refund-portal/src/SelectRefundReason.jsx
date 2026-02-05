@@ -53,6 +53,7 @@ export default function SelectRefundReason({
             label="Please describe your reason"
             value={otherText}
             onInput={handleOtherTextChange}
+            maxLength={200}
           />
         )}
       </s-stack>

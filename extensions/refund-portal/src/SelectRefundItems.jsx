@@ -36,20 +36,17 @@ export default function SelectRefundItems({
     <>
       {" "}
       <s-heading>{shopify.i18n.translate("selectItemsHeading")}</s-heading>
-      {/* <s-paragraph>
-        {shopify.i18n.translate("selectItemsInstructions")}
-      </s-paragraph> */}
       {submitError && (
         <s-banner tone="critical">
           <s-text>{submitError}</s-text>
         </s-banner>
       )}
-
       {refundableItems.length === 0 ? (
         <s-box paddingBlock="large">
           <s-banner tone="info">
             <s-text>
-              All items in this order have either been refunded or have a pending refund request.
+              All items in this order have either been refunded or have a
+              pending refund request.
             </s-text>
           </s-banner>
         </s-box>
@@ -72,6 +69,7 @@ export default function SelectRefundItems({
               />
             ))}
           </s-stack>
+
           <s-stack direction="inline" justifyContent="end">
             {" "}
             <s-button
