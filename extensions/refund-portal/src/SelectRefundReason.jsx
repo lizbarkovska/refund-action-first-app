@@ -28,7 +28,8 @@ export default function SelectRefundReason({
     onRefundReasonSelect(text ? `other: ${text}` : "other");
   };
 
-  const refundReasonIndicated = refundReason !== "";
+  const refundReasonIndicated =
+    refundReason !== "" && !(selectedChoice === "other" && !otherText.trim());
   return (
     <>
       <s-heading>Please fill in the refund survey:</s-heading>
