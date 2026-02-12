@@ -35,6 +35,21 @@ export default function SelectRefundItems({
   return (
     <>
       {" "}
+      <s-box padding="none none large none">
+        <s-banner>
+          {" "}
+          <s-paragraph>
+            If something isn't quite right, we're here to help. Start your
+            return below and select how you'd like to receive your refund.
+            Returns are processed once items are received and approved. Returns
+            available for fulfilled items only. For unfulfilled items, contact{" "}
+            <s-text type="emphasis">care@fabiani.ie.</s-text>{" "}
+            <s-text type="strong">
+              Shipping costs are not covered or refunded.
+            </s-text>
+          </s-paragraph>
+        </s-banner>
+      </s-box>
       <s-heading>{shopify.i18n.translate("selectItemsHeading")}</s-heading>
       {submitError && (
         <s-banner tone="critical">
@@ -57,6 +72,7 @@ export default function SelectRefundItems({
             direction="inline"
             gap="large"
             maxInlineSize="634px"
+            justifyContent="center"
           >
             {refundableItems.map(({ node: item }) => (
               <LineItemCard
