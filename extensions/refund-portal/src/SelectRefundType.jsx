@@ -40,7 +40,7 @@ export default function SelectRefundType({
             <s-button
               inlineSize="fill"
               variant="primary"
-              onClick={() => onSubmit("Store Credit")}
+              onClick={() => onSubmit("Store Credit + 5% bonus")}
               disabled={submitting}
               loading={submitting}
             >

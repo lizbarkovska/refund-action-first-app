@@ -474,13 +474,7 @@ function RefundPortalPage({ orderId }) {
       <s-section>
         {" "}
         <s-stack alignItems="center">
-          <s-box padding="base">
-            {" "}
-            {/* <s-text type="small">
-              Returns available for fulfilled items only. For unfulfilled items,
-              contact care@fabiani.ie
-            </s-text> */}
-          </s-box>
+          <s-box padding="base"> </s-box>
           <s-box padding="base base base base" maxInlineSize="800px">
             {refundStep === 1 && (
               <SelectRefundItems
